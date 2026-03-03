@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gabriel D. Llacuna</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #2a2a3a;
+      --accent: #5b5fef;
+      --accent2: #a78bfa;
+      --text: #e8e8f0;
+      --muted: #7878a0;
+      --tag-bg: #1e1e2e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    /* Glowing blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.12;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -100px; animation: drift 12s ease-in-out infinite alternate; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; animation: drift 15s ease-in-out infinite alternate-reverse; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* Layout */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 80px;
+    }
+
+    /* Header */
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 64px;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .header-left .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--accent2);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left .eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 1px;
+      background: var(--accent2);
+    }
+
+    .name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #e8e8f0 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .role-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--tag-bg);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .badge.accent {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(91,95,239,0.08);
+    }
+
+    /* Photo */
+    .photo-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .photo-frame {
+      width: 160px;
+      height: 160px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+      background: var(--card);
+    }
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--card), var(--surface));
+    }
+    .photo-placeholder svg { opacity: 0.3; }
+    .photo-placeholder span { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+
+    .photo-deco {
+      position: absolute;
+      inset: -6px;
+      border-radius: 24px;
+      border: 1px solid var(--accent);
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+      margin-bottom: 48px;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 52px;
+      animation: fadeUp 0.7s ease both;
+    }
+    .section:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-child(3) { animation-delay: 0.18s; }
+    .section:nth-child(4) { animation-delay: 0.26s; }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* About card */
+    .about-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      font-size: 14px;
+      line-height: 1.85;
+      color: #c0c0d8;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border-radius: 3px 0 0 3px;
+    }
+    .about-card .quote-mark {
+      font-family: 'Syne', sans-serif;
+      font-size: 64px;
+      line-height: 0;
+      position: absolute;
+      top: 36px; right: 28px;
+      color: var(--accent);
+      opacity: 0.08;
+      font-weight: 800;
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .info-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .info-card .ic-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .info-card .ic-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Contact */
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .contact-link:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(167,139,250,0.06);
+      transform: translateY(-2px);
+    }
+    .contact-link svg { flex-shrink: 0; opacity: 0.7; }
+    .contact-link:hover svg { opacity: 1; }
+
+    /* Footer */
+    footer {
+      margin-top: 60px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 10px;
+      animation: fadeUp 0.7s 0.35s ease both;
+    }
+    footer .dot { color: var(--accent); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      header { grid-template-columns: 1fr; }
+      .photo-frame { width: 120px; height: 120px; }
+      .page { padding: 40px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="eyebrow">Personal Portfolio</div>
+      <div class="name">Gabriel D.<br>Llacuna</div>
+      <div class="role-line">
+        <span class="badge accent">IT Student</span>
+        <span class="badge">3rd Year</span>
+        <span class="badge">Willing to Learn</span>
+      </div>
+    </div>
+
+    <div class="photo-wrap">
+      <div class="photo-frame">
+        <img src="images/pangprofile.png" alt="Portrait of Gabriel D. Llacuna" />
+      </div>
+      <div class="photo-deco"></div>
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- About -->
+  <div class="section">
+    <div class="section-label">About Me</div>
+    <div class="about-card">
+      <span class="quote-mark">"</span>
+      I'm Gabriel D. Llacuna, a 3rd-year Information Technology student with a passion for continuous growth. I approach every challenge as an opportunity to expand my skills and deepen my understanding of technology. I believe that staying curious, consistent, and open-minded is the foundation of becoming a great developer.
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="section">
+    <div class="section-label">Details</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-label">Full Name</div>
+        <div class="ic-value">Gabriel D. Llacuna</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Course</div>
+        <div class="ic-value">Information Technology</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Year Level</div>
+        <div class="ic-value">3rd Year</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Mindset</div>
+        <div class="ic-value">Willing to Learn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <div class="section">
+    <div class="section-label">Contact & Links</div>
+    <div class="contact-row">
+      <a class="contact-link" href="https://github.com/llacuna750" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.647.35-1.087.636-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+        </svg>
+        github.com/llacuna750
+      </a>
+      <a class="contact-link" href="tel:09944540950">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+        </svg>
+        0994 454 0950
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <span><span class="dot">●</span> Gabriel D. Llacuna &mdash; IT 3rd Year</span>
+    <span>Application Development &amp; Emerging Technologies</span>
+  </footer>
+
+</div>
+</body>
+</html>
