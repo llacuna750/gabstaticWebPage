@@ -300,6 +300,68 @@
     .contact-link svg { flex-shrink: 0; opacity: 0.7; }
     .contact-link:hover svg { opacity: 1; }
 
+    /* Calculator */
+    .calculator-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .calculator-display-wrap {
+      margin-bottom: 18px;
+    }
+    .calculator-subtext {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .calculator-display {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 16px 18px;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      text-align: right;
+      outline: none;
+    }
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .calc-btn {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.2s, background 0.2s;
+    }
+    .calc-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      background: rgba(91,95,239,0.08);
+    }
+    .calc-btn.operator {
+      color: var(--accent2);
+    }
+    .calc-btn.equals {
+      background: linear-gradient(135deg, rgba(91,95,239,0.18), rgba(167,139,250,0.18));
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .calc-btn.wide {
+      grid-column: span 2;
+    }
+
     /* Footer */
     footer {
       margin-top: 60px;
@@ -389,6 +451,45 @@
     </div>
   </div>
 
+  <!-- Calculator -->
+  <div class="section">
+    <div class="section-label">Calculator</div>
+    <div class="calculator-card">
+      <div class="calculator-display-wrap">
+        <div class="calculator-subtext">Quick arithmetic tool</div>
+        <input type="text" id="calcDisplay" class="calculator-display" value="0" readonly aria-label="Calculator display" />
+      </div>
+
+      <div class="calculator-grid" aria-label="Calculator buttons">
+        <button class="calc-btn operator" onclick="calcClear()">C</button>
+        <button class="calc-btn operator" onclick="calcBackspace()">⌫</button>
+        <button class="calc-btn operator" onclick="calcInput('(')">(</button>
+        <button class="calc-btn operator" onclick="calcInput(')')">)</button>
+
+        <button class="calc-btn" onclick="calcInput('7')">7</button>
+        <button class="calc-btn" onclick="calcInput('8')">8</button>
+        <button class="calc-btn" onclick="calcInput('9')">9</button>
+        <button class="calc-btn operator" onclick="calcInput('/')">÷</button>
+
+        <button class="calc-btn" onclick="calcInput('4')">4</button>
+        <button class="calc-btn" onclick="calcInput('5')">5</button>
+        <button class="calc-btn" onclick="calcInput('6')">6</button>
+        <button class="calc-btn operator" onclick="calcInput('*')">×</button>
+
+        <button class="calc-btn" onclick="calcInput('1')">1</button>
+        <button class="calc-btn" onclick="calcInput('2')">2</button>
+        <button class="calc-btn" onclick="calcInput('3')">3</button>
+        <button class="calc-btn operator" onclick="calcInput('-')">−</button>
+
+        <button class="calc-btn wide" onclick="calcInput('0')">0</button>
+        <button class="calc-btn" onclick="calcInput('.')">.</button>
+        <button class="calc-btn operator" onclick="calcInput('+')">+</button>
+
+        <button class="calc-btn equals wide" onclick="calcEvaluate()">=</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Contact -->
   <div class="section">
     <div class="section-label">Contact & Links</div>
@@ -415,5 +516,70 @@
   </footer>
 
 </div>
+
+<script>
+  (() => {
+    const display = document.getElementById('calcDisplay');
+    if (!display) return;
+
+    let expression = '';
+
+    const updateDisplay = () => {
+      display.value = expression || '0';
+    };
+
+    window.calcInput = (value) => {
+      if (expression === 'Error') expression = '';
+      expression += value;
+      updateDisplay();
+    };
+
+    window.calcClear = () => {
+      expression = '';
+      updateDisplay();
+    };
+
+    window.calcBackspace = () => {
+      expression = expression === 'Error' ? '' : expression.slice(0, -1);
+      updateDisplay();
+    };
+
+    window.calcEvaluate = () => {
+      if (!expression) return;
+
+      try {
+        const safeExpression = expression.replace(/×/g, '*').replace(/÷/g, '/');
+
+        if (!/^[0-9+\-*/().\s]+$/.test(safeExpression)) {
+          throw new Error('Invalid expression');
+        }
+
+        const result = Function(`"use strict"; return (${safeExpression})`)();
+        expression = Number.isFinite(result) ? String(result) : 'Error';
+      } catch {
+        expression = 'Error';
+      }
+
+      updateDisplay();
+    };
+
+    document.addEventListener('keydown', (event) => {
+      const { key } = event;
+
+      if (/^[0-9+\-*/().]$/.test(key)) {
+        calcInput(key);
+      } else if (key === 'Enter') {
+        event.preventDefault();
+        calcEvaluate();
+      } else if (key === 'Backspace') {
+        calcBackspace();
+      } else if (key === 'Escape') {
+        calcClear();
+      }
+    });
+
+    updateDisplay();
+  })();
+</script>
 </body>
 </html>
